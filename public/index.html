@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="index.css">
+  <title>Radio-T audio clipper</title>
+</head>
+
+<body>
+  <main>
+
+    <h1>Radio-T audio clipper</h1>
+
+    <label class="prompt">
+      Эпизод&nbsp;#
+      <input autofocus class="textfield" type="number" name="episode" maxlength="3" min="1" placeholder="000">
+    </label>
+
+    <div hiden id="toolbar" class="toolbar">
+      <audio id="audio-node" controls>
+        Sorry, audio is not supported
+      </audio>
+
+      <div class="clip-params">
+        <h2>Отрезок</h2>
+        <p class="clip-param">
+          Время от:
+          <span id="time-label-from" class="time-label"></span>
+          <button data-type="from" onclick="onTimeMark('from')" class="btn-pick-time">Отметить</button>
+        </p>
+        <p class="clip-param">
+          Время до:
+          <span id="time-label-to" class="time-label"></span>
+          <button data-type="to" onclick="onTimeMark('to')" class="btn-pick-time">Отметить</button>
+        </p>
+      </div>
+
+      <menu>
+        <li><button id="btn-start">✂ Кат!</button></li>
+      </menu>
+    </div>
+  </main>
+
+  <script src="./index.js"></script>
+</body>
+
+</html>

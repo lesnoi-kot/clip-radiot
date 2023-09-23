@@ -9,6 +9,10 @@ body {
   color: rgb(40, 40, 40);
 }
 
+p, h1, h2 {
+  margin: 0;
+}
+
 main {
   display: flex;
   flex-direction: column;
@@ -40,10 +44,9 @@ h1 {
 }
 
 .toolbar {
-  margin-top: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 3rem;
 }
 
 .prompt {
@@ -57,11 +60,12 @@ h1 {
 
 .textfield {
   padding: 1rem;
+  width: 5ch;
   box-sizing: border-box;
   font-size: inherit;
   border: none;
-  border-bottom: 5px solid lightseagreen;
-  appearance: textfield;
+  border-bottom: 4px solid lightseagreen;
+  transition: border-bottom 200ms;
 }
 
 .textfield:focus {
@@ -70,6 +74,10 @@ h1 {
 
 .textfield::placeholder {
   color: lightgray;
+}
+
+.textfield:invalid {
+  border: 1px solid salmon;
 }
 
 .btn-pick-time {
@@ -91,6 +99,42 @@ h1 {
   display: flex;
   gap: 1rem;
   align-items: center;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+section h2 {
+  margin-bottom: .8rem;
+}
+
+a {
+   color: lightseagreen;
+   font-size: 1.2rem;
+}
+
+#error-container {
+  padding-left: 1rem;
+  font-size: 1.2rem;
+  color: #f94646;
+  border-left: 2px solid red;
+}
+
+.media-control {
+  display: flex;
+  gap: .5rem;
+}
+
+.media-control button {
+  font-size: 1rem;
+  padding: 5px;
+}
+
+.hidden {
+  display: none !important;
 }
 
 @media (max-width: 440px) {

@@ -9,10 +9,12 @@ import (
 	"github.com/bogem/id3v2"
 )
 
+var id3Tag = []byte("ID3")
+
 func ParseTagFullSize(stream io.Reader) (int64, error) {
 	// The first part of the ID3v2 tag is the 10 byte tag header.
-	var buff [ID3TagHeaderSize]byte
-	n, err := stream.Read(buff[:])
+	var header [ID3TagHeaderSize]byte
+	n, err := stream.Read(header[:])
 
 	if err != nil && err != io.EOF {
 		return 0, err
@@ -23,11 +25,11 @@ func ParseTagFullSize(stream io.Reader) (int64, error) {
 	}
 
 	// The first three bytes of the tag are always "ID3".
-	if !bytes.Equal(buff[:3], []byte("ID3")) {
+	if !bytes.Equal(header[:3], id3Tag) {
 		return 0, errors.New("Input data is not an idv3 header")
 	}
 
-	size, err := parseSize(buff[6:])
+	size, err := parseSize(header[6:])
 	if err != nil {
 		return 0, err
 	}

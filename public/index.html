@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="index.css">
+  <link rel="icon" type="image/png" href="favicon.png" />
   <title>Radio-T audio clipper</title>
 </head>
 
@@ -15,15 +16,23 @@
 
     <label class="prompt">
       Эпизод&nbsp;#
-      <input autofocus class="textfield" type="number" name="episode" maxlength="3" min="1" placeholder="000">
+      <input autofocus class="textfield" pattern="\d+" type="text" name="episode" maxlength="3" placeholder="000">
     </label>
 
-    <div hiden id="toolbar" class="toolbar">
-      <audio id="audio-node" controls>
-        Sorry, audio is not supported
-      </audio>
+    <div id="error-container"></div>
 
-      <div class="clip-params">
+    <div id="toolbar" class="toolbar">
+      <section>
+        <h2>Аудио эпизода</h2>
+        <audio id="audio-node" controls>
+          Sorry, audio is not supported
+        </audio>
+        <div class="media-control">
+          <button onclick="rewindAudio(-5)">&#x23ea;</button><button onclick="rewindAudio(5)">&#x23e9;</button>
+        </div>
+      </section>
+
+      <section class="clip-params">
         <h2>Отрезок</h2>
         <p class="clip-param">
           Время от:
@@ -35,11 +44,18 @@
           <span id="time-label-to" class="time-label"></span>
           <button data-type="to" onclick="onTimeMark('to')" class="btn-pick-time">Отметить</button>
         </p>
-      </div>
+        <menu>
+          <li><button id="btn-clip">✂ Кат!</button></li>
+        </menu>
+      </section>
 
-      <menu>
-        <li><button id="btn-start">✂ Кат!</button></li>
-      </menu>
+      <section id="download-section" class="download-section">
+        <h2>Результат</h2>
+        <audio id="audio-preview" controls>
+          Sorry, audio is not supported
+        </audio>
+        <a href="#" id="download-link" target="_blank" download="clip.mp3" rel="noopener noreferrer">📎 Скачать</a>
+      </section>
     </div>
   </main>
 

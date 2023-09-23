@@ -19,26 +19,26 @@ const (
 func cutAudioHandler(c echo.Context) error {
 	episode, err := strconv.ParseUint(c.QueryParam("episode"), 10, 32)
 	if err != nil {
-		return echo.ErrBadRequest
+		return echo.NewHTTPError(http.StatusBadRequest, "Некорректный номер эпизода")
 	}
 
 	fromMs, err := strconv.ParseInt(c.QueryParam("from"), 10, 64)
 	if err != nil || fromMs < 0 {
-		return echo.ErrBadRequest
+		return echo.NewHTTPError(http.StatusBadRequest, "Некорректно задан отрезок времени")
 	}
 
 	toMs, err := strconv.ParseInt(c.QueryParam("to"), 10, 64)
 	if err != nil || toMs < 0 {
-		return echo.ErrBadRequest
+		return echo.NewHTTPError(http.StatusBadRequest, "Некорректно задан отрезок времени")
 	}
 
 	if toMs <= fromMs {
-		return echo.ErrBadRequest
+		return echo.NewHTTPError(http.StatusBadRequest, "Некорректно задан отрезок времени")
 	}
 
 	duration := toMs - fromMs
 	if duration > maxDuration || duration < minDuration {
-		return echo.ErrBadRequest
+		return echo.NewHTTPError(http.StatusBadRequest, "Длина клипа не должна быть меньше 5 секунд или больше 1-ой минуты")
 	}
 
 	audioURL := fmt.Sprintf("https://cdn.radio-t.com/rt_podcast%d.mp3", episode)

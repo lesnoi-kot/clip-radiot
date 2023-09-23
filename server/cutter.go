@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/lesnoi-kot/clip-radiot/mpeg"
@@ -30,8 +29,6 @@ func probeAudio(ctx context.Context, url string) (*probeAudioResult, error) {
 	}
 
 	defer res.Body.Close()
-
-	log.Println("Do() no error", res)
 
 	tagFullSize, err := mpeg.ParseTagFullSize(res.Body)
 	if err != nil {

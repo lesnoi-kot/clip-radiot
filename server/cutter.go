@@ -83,7 +83,16 @@ func cutAudio(params cutAudioParams) ([]byte, error) {
 		return nil, err
 	}
 
-	blob, err = mpeg.SkipToSyncMark(mpeg.ShrinkToSyncMark(blob), 1)
+	// Skip anything before the first occured actual frame.
+	var skipTimes uint = 1
+
+	// If a clip requested from the very beginning,
+	// make an extra skip of the LAME-header with uncropped audio info.
+	if params.fromMs == 0 {
+		skipTimes++
+	}
+
+	blob, err = mpeg.SkipToSyncMark(mpeg.ShrinkToSyncMark(blob), skipTimes)
 	if err != nil {
 		return nil, err
 	}

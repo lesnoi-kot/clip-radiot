@@ -3,13 +3,13 @@ package mpeg
 import (
 	"errors"
 	"io"
-	"time"
 
 	"github.com/tcolgate/mp3"
 )
 
 const (
-	ID3TagHeaderSize = 10
+	ID3TagHeaderSize     = 10
+	framesCountToAnalyze = 500
 
 	// http://www.mp3-tech.org/programmer/frame_header.html
 	// http://www.multiweb.cz/twoinches/mp3inside.htm
@@ -18,35 +18,37 @@ const (
 
 type AudioInfo struct {
 	FramesOffset  int64
-	BitRate       int
-	SampleRate    int
-	FrameSize     int
-	FrameDuration time.Duration
+	FrameSize     float64 // Average frame size
+	FrameDuration float64 // ms
 }
 
 func (audioInfo AudioInfo) GetTimestampOffset(ms int64) int64 {
-	msPerFrame := audioInfo.FrameDuration.Milliseconds()
-	return audioInfo.FramesOffset + int64(float64(ms)/float64(msPerFrame)*float64(audioInfo.FrameSize))
+	return audioInfo.FramesOffset + int64(float64(ms)/float64(audioInfo.FrameDuration)*float64(audioInfo.FrameSize))
 }
 
 func InpsectAudio(stream io.Reader) (AudioInfo, error) {
 	var info AudioInfo
 	var frame mp3.Frame
 	var skipped int
+	var avgFrameSize float64
 
 	info.FramesOffset, _ = ParseTagFullSize(stream)
-	io.CopyN(io.Discard, stream, info.FramesOffset)
+	io.CopyN(io.Discard, stream, info.FramesOffset-ID3TagHeaderSize)
 
 	decoder := mp3.NewDecoder(stream)
-	if err := decoder.Decode(&frame, &skipped); err != nil {
-		return info, err
+
+	for i := 1; i <= framesCountToAnalyze; i++ {
+		if err := decoder.Decode(&frame, &skipped); err != nil {
+			return info, err
+		}
+		avgFrameSize += float64(frame.Size())
 	}
 
+	avgFrameSize = avgFrameSize / framesCountToAnalyze
+
 	info.FramesOffset += int64(skipped)
-	info.BitRate = int(frame.Header().BitRate())
-	info.SampleRate = int(frame.Header().SampleRate())
-	info.FrameSize = frame.Size()
-	info.FrameDuration = frame.Duration()
+	info.FrameSize = avgFrameSize
+	info.FrameDuration = (1000 / float64(frame.Header().SampleRate())) * float64(frame.Samples())
 
 	return info, nil
 }

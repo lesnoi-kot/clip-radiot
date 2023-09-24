@@ -2,3 +2,4 @@ main
 .editorconfig
 .git
 .gitignore
+docker-swarm.yml

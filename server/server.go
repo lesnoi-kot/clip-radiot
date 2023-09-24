@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -17,8 +18,13 @@ func NewServer() *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.GET("/api/cut", cutAudioHandler) // TODO: rate limit
-	e.StaticFS("/", public.StaticData)
+	e.GET("/api/cut", cutAudioHandler, middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(5)))
+
+	if os.Getenv("DEBUG") != "" {
+		e.Static("/", "public")
+	} else {
+		e.StaticFS("/", public.StaticData)
+	}
 
 	return e
 }

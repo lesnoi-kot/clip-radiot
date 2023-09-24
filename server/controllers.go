@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	maxDuration = 1 * 60 * 1000 // 1 min
+	maxDuration = 5 * 60 * 1000 // 5 min
 	minDuration = 5_000         // 5 sec
 )
 
@@ -38,7 +38,7 @@ func cutAudioHandler(c echo.Context) error {
 
 	duration := toMs - fromMs
 	if duration > maxDuration || duration < minDuration {
-		return echo.NewHTTPError(http.StatusBadRequest, "Длина клипа не должна быть меньше 5 секунд или больше 1-ой минуты")
+		return echo.NewHTTPError(http.StatusBadRequest, "Длина клипа не должна быть меньше 5 секунд или больше 5 минут")
 	}
 
 	audioURL := fmt.Sprintf("https://cdn.radio-t.com/rt_podcast%d.mp3", episode)
@@ -50,24 +50,24 @@ func cutAudioHandler(c echo.Context) error {
 
 	ctx := c.Request().Context()
 
-	audioInfo, err := probeAudio(ctx, audioURL)
+	probeResult, err := probeAudio(ctx, audioURL)
 	if err != nil {
 		return fmt.Errorf("Audio probing error: %w", err)
 	}
 
 	log.Printf(
-		"Audio probe info for Radio-T #%d: size=%d bytes, tag=%d bytes",
+		"Audio probe info for Radio-T #%d: full size=%d bytes, tag=%v",
 		episode,
-		audioInfo.fullContentSize,
-		audioInfo.fullTagSize,
+		probeResult.fullContentSize,
+		probeResult,
 	)
 
 	audioFrames, err := cutAudio(cutAudioParams{
-		ctx:         ctx,
-		url:         audioURL,
-		offsetBytes: audioInfo.fullTagSize,
-		fromMs:      fromMs,
-		toMs:        toMs,
+		ctx:       ctx,
+		url:       audioURL,
+		audioInfo: probeResult.audioInfo,
+		fromMs:    fromMs,
+		toMs:      toMs,
 	})
 	if err != nil {
 		return fmt.Errorf("Audio cut error: %w", err)

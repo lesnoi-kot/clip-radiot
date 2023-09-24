@@ -29,7 +29,7 @@ func ParseTagFullSize(stream io.Reader) (int64, error) {
 		return 0, errors.New("Input data is not an idv3 header")
 	}
 
-	size, err := parseSize(header[6:])
+	size, err := parseSizeField(header[6:])
 	if err != nil {
 		return 0, err
 	}
@@ -39,7 +39,7 @@ func ParseTagFullSize(stream io.Reader) (int64, error) {
 
 // "Inspired" by https://github.com/n10v/id3v2/blob/v1.2.0/size.go#L80
 // Unfortunately it's private function in the lib.
-func parseSize(data []byte) (int64, error) {
+func parseSizeField(data []byte) (int64, error) {
 	if len(data) != 4 {
 		return 0, fmt.Errorf("ID3 size invalid size: %d, should be 4", len(data))
 	}

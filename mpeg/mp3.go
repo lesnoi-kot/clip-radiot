@@ -1,24 +1,54 @@
 package mpeg
 
-import "errors"
+import (
+	"errors"
+	"io"
+	"time"
+
+	"github.com/tcolgate/mp3"
+)
 
 const (
 	ID3TagHeaderSize = 10
-
-	// Hardcoded params for the Radio-T audio files.
-	sampleRate         = 44100
-	bitrate            = 128000
-	padding            = 1
-	frameSize          = (144*bitrate)/sampleRate + padding
-	msPerFrame float64 = 1000 / ((float64(bitrate) / 8) / frameSize)
 
 	// http://www.mp3-tech.org/programmer/frame_header.html
 	// http://www.multiweb.cz/twoinches/mp3inside.htm
 	syncMark uint16 = 0b11111111111_11011
 )
 
-func TimestampToByteOffset(ms int64) int64 {
-	return int64(float64(ms) / msPerFrame * float64(frameSize))
+type AudioInfo struct {
+	FramesOffset  int64
+	BitRate       int
+	SampleRate    int
+	FrameSize     int
+	FrameDuration time.Duration
+}
+
+func (audioInfo AudioInfo) GetTimestampOffset(ms int64) int64 {
+	msPerFrame := audioInfo.FrameDuration.Milliseconds()
+	return audioInfo.FramesOffset + int64(float64(ms)/float64(msPerFrame)*float64(audioInfo.FrameSize))
+}
+
+func InpsectAudio(stream io.Reader) (AudioInfo, error) {
+	var info AudioInfo
+	var frame mp3.Frame
+	var skipped int
+
+	info.FramesOffset, _ = ParseTagFullSize(stream)
+	io.CopyN(io.Discard, stream, info.FramesOffset)
+
+	decoder := mp3.NewDecoder(stream)
+	if err := decoder.Decode(&frame, &skipped); err != nil {
+		return info, err
+	}
+
+	info.FramesOffset += int64(skipped)
+	info.BitRate = int(frame.Header().BitRate())
+	info.SampleRate = int(frame.Header().SampleRate())
+	info.FrameSize = frame.Size()
+	info.FrameDuration = frame.Duration()
+
+	return info, nil
 }
 
 func SkipToSyncMark(body []byte, n uint) ([]byte, error) {

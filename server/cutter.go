@@ -9,9 +9,12 @@ import (
 	"github.com/lesnoi-kot/clip-radiot/mpeg"
 )
 
+// Retrieve firstChunkSize bytes from an audio to inspect it.
+const firstChunkSize = 500 * 1024
+
 type probeAudioResult struct {
 	fullContentSize int64
-	fullTagSize     int64
+	audioInfo       mpeg.AudioInfo
 }
 
 func probeAudio(ctx context.Context, url string) (*probeAudioResult, error) {
@@ -20,8 +23,7 @@ func probeAudio(ctx context.Context, url string) (*probeAudioResult, error) {
 		return nil, err
 	}
 
-	// Request only tag header info.
-	req.Header.Add("Range", fmt.Sprintf("bytes=0-%d", mpeg.ID3TagHeaderSize-1))
+	req.Header.Add("Range", fmt.Sprintf("bytes=0-%d", firstChunkSize))
 
 	res, err := httpClient.Do(req)
 	if err != nil {
@@ -30,7 +32,7 @@ func probeAudio(ctx context.Context, url string) (*probeAudioResult, error) {
 
 	defer res.Body.Close()
 
-	tagFullSize, err := mpeg.ParseTagFullSize(res.Body)
+	audioInfo, err := mpeg.InpsectAudio(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -42,16 +44,16 @@ func probeAudio(ctx context.Context, url string) (*probeAudioResult, error) {
 
 	return &probeAudioResult{
 		fullContentSize: contentFullSize,
-		fullTagSize:     tagFullSize,
+		audioInfo:       audioInfo,
 	}, nil
 }
 
 type cutAudioParams struct {
-	ctx         context.Context
-	url         string
-	offsetBytes int64
-	fromMs      int64
-	toMs        int64
+	ctx       context.Context
+	url       string
+	audioInfo mpeg.AudioInfo
+	fromMs    int64
+	toMs      int64
 }
 
 func cutAudio(params cutAudioParams) ([]byte, error) {
@@ -65,8 +67,8 @@ func cutAudio(params cutAudioParams) ([]byte, error) {
 		return nil, err
 	}
 
-	fromBytes := params.offsetBytes + mpeg.TimestampToByteOffset(params.fromMs)
-	toBytes := params.offsetBytes + mpeg.TimestampToByteOffset(params.toMs)
+	fromBytes := params.audioInfo.GetTimestampOffset(params.fromMs)
+	toBytes := params.audioInfo.GetTimestampOffset(params.toMs)
 	req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", fromBytes, toBytes))
 
 	res, err := httpClient.Do(req)
@@ -81,8 +83,7 @@ func cutAudio(params cutAudioParams) ([]byte, error) {
 		return nil, err
 	}
 
-	// Go to LAME Info-frame first, then skip to actual frames.
-	blob, err = mpeg.SkipToSyncMark(blob, 2)
+	blob, err = mpeg.SkipToSyncMark(mpeg.ShrinkToSyncMark(blob), 1)
 	if err != nil {
 		return nil, err
 	}

@@ -1,9 +1,13 @@
 const episodeInputEl = document.querySelector('input[name="episode"]');
 const audioEl = document.getElementById('audio-node');
+const audioPreviewEl = document.getElementById('audio-preview');
 const btnClip = document.getElementById('btn-clip');
 const toolbar = document.getElementById('toolbar');
 const errorContainer = document.getElementById('error-container');
 const downloadSection = document.getElementById('download-section');
+const downloadLink = document.getElementById('download-link');
+
+let episodeChangeTimerId;
 
 const appState = {
   episode: 0,
@@ -29,6 +33,8 @@ function onTimeMark(type) {
       from: appState.to,
       to: appState.from,
     });
+  } else {
+    syncUI();
   }
 }
 
@@ -37,12 +43,20 @@ function rewindAudio(delta) {
 }
 
 function syncUI() {
-  const { error, episodeLoaded, clipURL } = appState;
+  const { error, episodeLoaded, clipURL, isFetching } = appState;
 
   errorContainer.innerText = error ? error.message : '';
   setElementVisible(errorContainer, !!error);
-  setElementVisible(toolbar, episodeLoaded);
+  setElementVisible(toolbar, episodeLoaded && episodeInputEl.value !== '');
   setElementVisible(downloadSection, !!clipURL);
+
+  if (isFetching) {
+    btnClip.innerText = 'Загрузка...';
+    btnClip.disabled = true;
+  } else {
+    btnClip.innerText = '✂ Кат!';
+    btnClip.disabled = false;
+  }
 
   updateTimeMarkers();
 }
@@ -74,16 +88,38 @@ btnClip.addEventListener('click', () => {
     })
     .then(audioBlob => {
       const audioURL = URL.createObjectURL(audioBlob);
-      document.getElementById('download-link').href = audioURL;
-      document.getElementById('audio-preview').src = audioURL;
+      downloadLink.href = audioURL;
+      downloadLink.download = `Radio-T ${appState.episode} (from ${replaceColons(formatTimestamp(appState.from))} to ${replaceColons(formatTimestamp(appState.to))}).mp3`;
+      audioPreviewEl.src = audioURL;
       appState.clipURL = audioURL;
     })
     .catch((error) => {
       appState.error = error;
     }).finally(() => {
+      appState.isFetching = false;
       syncUI();
     });
 });
+
+function handleEpisodeInputValue() {
+  if (episodeInputEl.value === '') {
+    return;
+  }
+
+  const episode = parseInt(episodeInputEl.value, 10);
+
+  if (!Number.isInteger(episode)) {
+    appState.update({ error: new Error('Введен некорректный номер выпуска') });
+    return;
+  }
+
+  if (episode !== appState.episode) {
+    appState.update({ from: 0, to: 0, episode });
+    audioEl.src = `https://cdn.radio-t.com/rt_podcast${episode}.mp3`;
+  } else {
+    appState.update({ error: null });
+  }
+}
 
 episodeInputEl.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' || event.key === 'Escape') {
@@ -91,18 +127,16 @@ episodeInputEl.addEventListener('keydown', (event) => {
   }
 });
 
-episodeInputEl.addEventListener('blur', () => {
-  const episode = parseInt(episodeInputEl.value, 10);
+episodeInputEl.oninput = () => {
+  clearTimeout(episodeChangeTimerId);
+  episodeChangeTimerId = setTimeout(handleEpisodeInputValue, 1000);
+}
 
-  if (Number.isInteger(episode) && episode !== appState.episode) {
-    appState.update({ from: 0, to: 0, episode });
-    audioEl.src = `https://cdn.radio-t.com/rt_podcast${episode}.mp3`;
-  }
-});
+episodeInputEl.addEventListener('blur', handleEpisodeInputValue);
 
-audioEl.addEventListener('canplay', function () {
+audioEl.oncanplay = () => {
   appState.update({ episodeLoaded: true });
-});
+};
 
 audioEl.onerror = () => {
   appState.update({
@@ -110,6 +144,14 @@ audioEl.onerror = () => {
     episodeLoaded: false,
     clipURL: null,
   });
+}
+
+audioPreviewEl.oncanplay = () => {
+  appState.update({ isFetching: false });
+}
+
+audioPreviewEl.onerror = () => {
+  appState.update({ isFetching: false, error: new Error('Выпуск не найден!') });
 }
 
 syncUI();
@@ -135,4 +177,8 @@ function setElementVisible(el, visible) {
   } else {
     el.classList.add('hidden');
   }
+}
+
+function replaceColons(str, to) {
+  return String(str).replaceAll(':', '-');
 }

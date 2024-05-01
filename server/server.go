@@ -1,16 +1,12 @@
 package server
 
 import (
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/lesnoi-kot/clip-radiot/public"
 )
-
-var httpClient = &http.Client{Timeout: 15 * time.Second}
 
 func NewServer() *echo.Echo {
 	e := echo.New()

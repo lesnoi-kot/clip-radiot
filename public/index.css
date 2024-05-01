@@ -2,24 +2,14 @@
   color-scheme: light dark;
 }
 
-body {
-  margin: 0;
-  padding: 1rem 5rem;
-  font-family: sans-serif;
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: light) {
-  body {
-    color: rgb(40, 40, 40);
-  }
-
-  h1 {
-    color: rgb(30, 30, 30);
-  }
-
-  .time-label {
-    background-color: rgb(245 245 245);
-  }
+body {
+  margin: 0;
+  padding: 0 0 0 1rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 p, h1, h2 {
@@ -28,6 +18,7 @@ p, h1, h2 {
 
 h1 {
   font-size: 3rem;
+  margin-top: 3rem;
 }
 
 a {
@@ -49,7 +40,7 @@ main {
   flex-direction: column;
   gap: 2rem;
   width: 80%;
-  max-width: 480px;
+  max-width: 640px;
   margin: 0 auto;
 }
 
@@ -68,7 +59,6 @@ menu {
 
 .prompt {
   display: flex;
-  width: fit-content;
   flex-direction: row;
   align-items: center;
   font-size: 2rem;
@@ -76,17 +66,12 @@ menu {
 }
 
 .textfield {
-  padding: 1rem;
+  padding: .8rem;
   width: 5ch;
-  box-sizing: border-box;
+  box-sizing: content-box;
   font-size: inherit;
-  border: none;
-  border-bottom: 4px solid lightseagreen;
-  transition: border-bottom 200ms;
-}
-
-.textfield:focus {
-  border-bottom-color: transparent;
+  border: 1px solid lightseagreen;
+  border-radius: 4px;
 }
 
 .textfield::placeholder {
@@ -144,26 +129,31 @@ section h2 {
   padding: 5px;
 }
 
-.hidden {
-  display: none !important;
-}
-
-@media (max-width: 440px) {
-  body {
-    padding: 1rem;
-  }
-
+@media (max-width: 640px) {
   h1 {
     font-size: 2rem;
+    margin-top: 2rem;
   }
 
   .prompt {
     font-size: 1rem;
   }
+}
 
-  .prompt {
-    align-items: start;
-    flex-direction: column;
-    gap: .8rem;
+.hidden {
+  display: none;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    color: rgb(40 40 40);
+  }
+
+  h1 {
+    color: rgb(30 30 30);
+  }
+
+  .time-label {
+    background-color: rgb(245 245 245);
   }
 }

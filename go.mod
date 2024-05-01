@@ -1,6 +1,6 @@
 module github.com/lesnoi-kot/clip-radiot
 
-go 1.19
+go 1.21
 
 require (
 	github.com/bogem/id3v2 v1.2.0

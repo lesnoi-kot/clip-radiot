@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/lesnoi-kot/clip-radiot/mpeg"
 )
+
+var httpClient = &http.Client{Timeout: 15 * time.Second}
 
 // Retrieve firstChunkSize bytes from an audio to inspect it.
 const firstChunkSize = 500 * 1024
